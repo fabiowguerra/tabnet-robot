@@ -1,4 +1,4 @@
-#!/usr/bin/python
+﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 import httplib 
 import urllib 
@@ -23,6 +23,16 @@ gender_values = {
     "sexo_feminino" : [ ( "SSexo" , "2") ],
 #    "sexo_ignorado" : [ ( "SSexo" , "3") ]
     "sexo_todos" : [ ("SSexo" , "TODAS_AS_CATEGORIAS__") ]
+}
+
+cor_values = {
+    "cor_branca" : [ ( "SCor%2Fra%E7a" , "1") ],
+    "cor_preta" : [ ( "SCor%2Fra%E7a" , "2") ],
+    "cor_parda" : [ ( "SCor%2Fra%E7a" , "3") ],
+    "cor_amarela" : [ ( "SCor%2Fra%E7a" , "4") ],
+    "cor_indigena" : [ ( "SCor%2Fra%E7a" , "5") ],
+    "cor_ignorada" : [ ( "SCor%2Fra%E7a" , "6") ],
+    "cor_todas" : [ ("SCor%2Fra%E7a" , "TODAS_AS_CATEGORIAS__") ]
 }
 
 age18_values = {
@@ -65,14 +75,15 @@ region_values = {
 
 increment_values = {
     "aih": [ ( "Incremento" , "Quantidade_de_AIH" ) ],
-    "acompanhantes": [ ( "Incremento" , "M%E9dia_de_di%E1rias_de_acompanh" ) ],
+    "media_acompanhantes": [ ( "Incremento" , "M%E9dia_de_di%E1rias_de_acompanh" ) ],
     "obitos": [ ( "Incremento" , "%D3bitos" ) ],
-    "permanencia": [ ( "Incremento" , "M%E9dia_de_perman%EAncia" ) ],
-    "custo": [ ( "Incremento" , "Valor_total" ) ]
+    "media_permanencia": [ ( "Incremento" , "M%E9dia_de_perman%EAncia" ) ],
+    "custo": [ ( "Incremento" , "Valor_total" ) ],
+    "dias_permanencia": [ ( "Incremento" , "Dias_de_perman%EAncia" ) ],
+    "dias_acompanhantes": [ ( "Incremento" , "N%FAmero_de_di%E1rias_de_acompanh" ) ]
 }
 
 original_values = [
-    ( "Linha" , "Diagn%F3stico_-_cap%EDtulo"),
     ( "Coluna" , "Ano_do_processamento"),
     ( "SDiagn%F3stico_-_cap%EDtulo" , "TODAS_AS_CATEGORIAS__"),
     ( "SMunic%EDpio_de_resid%EAncia" , "TODAS_AS_CATEGORIAS__"),
@@ -96,7 +107,6 @@ original_values = [
     ( "SGest%E3o" , "TODAS_AS_CATEGORIAS__"),
     ( "SIdade_%289_faixas%29" , "TODAS_AS_CATEGORIAS__"),
     ( "SIdade_detalhada" , "TODAS_AS_CATEGORIAS__"),
-    ( "SCor%2Fra%E7a" , "TODAS_AS_CATEGORIAS__"),
     ( "SEspecialidade_do_leito" , "TODAS_AS_CATEGORIAS__"),
     ( "STipo_de_AIH" , "TODAS_AS_CATEGORIAS__"),
     ( "SIdentifica%E7%E3o_da_AIH" , "TODAS_AS_CATEGORIAS__"),
@@ -131,13 +141,14 @@ original_values = [
     ( "mostre" , "Mostra")
 ]
 
-def process_values(v0, increment, region, gender, age18, filename):
+def process_values(v0, increment, region, gender, cor, age18, filename):
     print filename
 
     values = list(v0)
     values += increment_values[increment]
     values += region_values[region]
     values += gender_values[gender]
+    values += cor_values[cor]
     values += age18_values[age18]
 
     encoded_data = ""
@@ -191,24 +202,34 @@ def process_values(v0, increment, region, gender, age18, filename):
         #    print "error opening url"
 
 
-values = original_values
+rows = {
+    "cap" : ( "Linha" , "Diagn%F3stico_-_cap%EDtulo"),
+    "sab" : ( "Linha" , "Diagn%F3stico_sens%EDv_at.b%E1sica_1")
+}
 
-for year in sorted(year_values):
-    values += year_values[year]
+for row in ["sab", "cap"]:
+	values = list(original_values)
+	values += [ rows[row] ]
 
-v0 = list(values)
+	for year in sorted(year_values):
+		values += year_values[year]
 
-for region in region_values:
+	v0 = list(values)
 
-    for increment in increment_values:
-        process_values(v0, increment, region, "sexo_todos", "idade_todos", "%s_%s.csv" % (region, increment) )
+	for region in region_values:
 
-    for increment in ["aih", "acompanhantes", "custo"]:
-        for k in gender_values:
-            process_values(v0, increment, region, k, "idade_todos", "%s_%s_%s.csv" % (region, increment, k) )
+		for increment in increment_values:
+		    process_values(v0, increment, region, "sexo_todos", "cor_todas", "idade_todos", "%s_%s_%s.csv" % (row, region, increment) )
 
-        for k in age18_values:
-            process_values(v0, increment, region, "sexo_todos", k, "%s_%s_%s.csv" % (region, increment, k) )
+		for increment in ["aih", "media_acompanhantes", "dias_acompanhantes", "custo"]:
+			for k in cor_values:
+				process_values(v0, increment, region, "sexo_todos", k, "idade_todos", "%s_%s_%s_%s.csv" % (row, region, increment, k) )
+
+			for k in gender_values:
+				process_values(v0, increment, region, k, "cor_todas", "idade_todos", "%s_%s_%s_%s.csv" % (row, region, increment, k) )
+
+			for k in age18_values:
+				process_values(v0, increment, region, "sexo_todos", "cor_todas", k, "%s_%s_%s_%s.csv" % (row, region, increment, k) )
 
 #
 #counter = 0
